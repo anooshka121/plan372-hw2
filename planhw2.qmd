@@ -1,0 +1,150 @@
+---
+title: "PLAN 372 - HW2"
+author: "Anooshka Deshpande"
+format: html
+editor: visual
+---
+
+```{r}
+
+library(tidyverse)
+library(lubridate)
+library(dbplyr)
+```
+
+```{r}
+restaurant_data<-read_csv(here::here("restaurant_inspections.csv"))
+view(restaurant_data)
+```
+
+Question 1:
+
+```{r}
+#I created a histogram because I want to observe the distribution of one quantitative variable, which is the inspection score.
+ggplot(restaurant_data, aes(x = SCORE)) +
+  geom_histogram()
+
+```
+
+Question 2:
+
+```{r}
+restaurant_age = mutate(restaurant_data, age_since_2024 = 2024 - year(restaurant_data$RESTAURANTOPENDATE))
+ggplot(restaurant_age, aes(x = age_since_2024, y = restaurant_data$SCORE))+
+  geom_point()
+```
+
+From this scatterplot, it looks like there is a weak positive relationship between restaurant age and score. I see that newer restaurants, particularly those under 10 years old, a higher amount of low inspection scores compared to older restaurants.
+
+Question 3:
+
+```{r}
+sort(unique(restaurant_data$city_uppercase))
+restaurant_data$CITY = str_to_upper(restaurant_data$CITY)
+restaurant_data |>
+  mutate(CITY = recode(CITY,
+       "FUQUAY-VARINA" = "FUQUAY VARINA",
+       "HOLLY SPRING" = "HOLLY SPRINGS",
+       "MORRISVILE" = "MORRISVILLE",
+       "RTP" = "RESEARCH TRIANGLE PARK"))
+
+restaurant_data |>
+  select(CITY, SCORE) |>
+  group_by(CITY) |>
+  summarise(mean = mean(SCORE))
+```
+
+`Yes, inspection scores vary by city. EVery city has a different mean inspection score.`
+
+Question 4:
+
+```{r}
+#Question 4
+#I used a boxplot because I want to observe whether a quantitative variable, score, varies with a categorical variable, inspector.
+ggplot(restaurant_data, aes(x = INSPECTOR, y = SCORE))+
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Inspection scores vary by inspector, because the mean values and interquartile range on each of the individual boxplots are different. It is possible that a wider interquartile range corresponds to a more thorough inspector.
+
+Question 5:
+
+```{r}
+restaurant_data |>
+  group_by(CITY) |>
+  summarise(n = n())
+restaurant_data |>
+  group_by(INSPECTOR) |>
+  summarise(n = n())
+```
+
+The extreme results from the previous questions could be due to differences in sample size. I see that some towns, such as RTP and Wake Forest, underwent under 200 inspections, whereas other towns such as Raleigh underwent over 1800 inspections. I see that some inspectors conducted as few as 2 inspections, whereas others conducted nearly 350 inspections. This could introduce bias into the inspection scores.
+
+Question 6:
+
+```{r}
+restaurant_data |>
+  group_by(FACILITYTYPE) |>
+  summarise(median = median(SCORE)) |>
+  arrange(desc(median))
+```
+
+According to the table, the median score for restaurants is near the bottom of the range of median scores of all facility types. I can conclude that restaurants are not as clean as the other facility types.
+
+Question 7:
+
+```{r}
+restaurant_only = restaurant_data |>
+  filter(FACILITYTYPE == "Restaurant")
+view(restaurant_only)
+```
+Step 1:
+```{r}
+ggplot(restaurant_only, aes(x = SCORE)) +
+  geom_histogram()
+```
+
+Step 2:
+```{r}
+restaurant_only_age = mutate(restaurant_only, age_since_2024 = 2024 - year(restaurant_only$RESTAURANTOPENDATE))
+ggplot(restaurant_only_age, aes(x = age_since_2024, y = restaurant_only$SCORE))+
+  geom_point()
+```
+There is a weak positive correlation between age and inspection score.
+
+Step 3:
+```{r}
+restaurant_only$CITY = str_to_upper(restaurant_only$CITY)
+restaurant_only |>
+  mutate(CITY = recode(CITY,
+       "FUQUAY-VARINA" = "FUQUAY VARINA",
+       "HOLLY SPRING" = "HOLLY SPRINGS",
+       "MORRISVILE" = "MORRISVILLE",
+       "RTP" = "RESEARCH TRIANGLE PARK"))
+
+restaurant_only |>
+  select(CITY, SCORE) |>
+  group_by(CITY) |>
+  summarise(mean = mean(SCORE))
+```
+Yes, inspection scores vary by city.
+
+Step 4:
+```{r}
+ggplot(restaurant_only, aes(x = INSPECTOR, y = SCORE))+
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Yes, inspection scores vary by instructor. The mean values and interquartile range on each of the individual boxplots are different. It is possible that a wider interquartile range corresponds to a more thorough inspector.
+
+Step 5:
+```{r}
+restaurant_only |>
+  group_by(CITY) |>
+  summarise(n = n())
+restaurant_only |>
+  group_by(INSPECTOR) |>
+  summarise(n = n())
+```
+The sample size for each city and inspector vary by a large amount, and this could be an explanation for the extreme results seen in the previous questions.
